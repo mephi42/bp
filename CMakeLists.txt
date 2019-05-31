@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.11)
 project(bp)
 set(CMAKE_C_STANDARD 11)
-add_executable(main main.c)
-add_custom_target(format COMMAND clang-format -style=file -i main.c)
+add_executable(main main.c s390x.h)
+add_custom_target(format COMMAND clang-format -style=file -i *.c *.h)
