@@ -1,5 +1,7 @@
+.idea/
 CMakeCache.txt
 CMakeFiles/
 Makefile
+bp.cbp
 cmake_install.cmake
 main
