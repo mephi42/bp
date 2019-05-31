@@ -1,8 +1,10 @@
 #define _GNU_SOURCE
 #include <assert.h>
 #include <getopt.h>
+#include <netinet/in.h>
 #include <sched.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,31 +41,37 @@ static void link12(char *dst1, char *dst2) {
 
 /* Time measurements */
 struct timer {
-	long *dt_current;
+	uint16_t *dts;
+	uint16_t *dt;
+	long t0;
 	long dummy2;
 	long dummy3;
 };
-static void timer_init(struct timer *t, long *dts) {
-	t->dt_current = dts;
+static void timer_init(struct timer *t, size_t length) {
+	t->dts = calloc((length / 2) * (length / 2), sizeof(uint16_t));
+	assert(t->dts != NULL);
+	t->dt = t->dts;
 	t->dummy3 = (long)&t->dummy3;
 }
 static void timer_start(struct timer *t) {
-	__asm__ volatile("ectg %[dt],%[dummy2],%[dummy3]\n"
+	t->t0 = 0;
+	__asm__ volatile("ectg %[t0],%[dummy2],%[dummy3]\n"
 			"lcgr %%r0,%%r0\n"
-			"stg %%r0,%[dt]\n"
-			: [dt] "+m" (*t->dt_current)
+			"stg %%r0,%[t0]\n"
+			: [t0] "+m" (t->t0)
 			, [dummy3] "+r" (t->dummy3)
 			: [dummy2] "m" (t->dummy2)
 			: "r0", "r1");
 }
 static void timer_end(struct timer *t) {
-	__asm__ volatile("ectg %[dt],%[dummy2],%[dummy3]\n"
-			"stg %%r0,%[dt]\n"
-			: [dt] "+m" (*t->dt_current)
+	__asm__ volatile("ectg %[t0],%[dummy2],%[dummy3]\n"
+			"stg %%r0,%[t0]\n"
+			: [t0] "+m" (t->t0)
 			, [dummy3] "+r" (t->dummy3)
 			: [dummy2] "m" (t->dummy2)
 			: "r0", "r1");
-	t->dt_current++;
+	*t->dt = t->t0 >= 0xffff ? 0xffff : htons((uint16_t)t->t0);
+	t->dt++;
 }
 
 /* User interface */
@@ -80,20 +88,14 @@ static void *alloc_pattern(const char *s, int repeat) {
 	}
 	return d;
 }
-static void output(long *dts, size_t length) {
-	for (size_t i = 0; i < length - sizeof(code1); i += 2) {
-		for (size_t j = 0; j < i + sizeof(code1) && j < length - sizeof(code2); j += 2) {
-			printf("0 ");
-		}
-		for (size_t j = i + sizeof(code1); j < length - sizeof(code2); j += 2) {
-			printf("%ld ", *dts);
-			dts++;
-		}
-		printf("\n");
-	}
+static void output(size_t length, size_t offset, struct timer *t) {
+	uint32_t header[] = {htonl(1), htonl((uint32_t)length), htonl((uint32_t)offset)};
+	fwrite(header, sizeof(header), 1, stdout);
+	fwrite(t->dts, t->dt - t->dts, sizeof(unsigned short), stdout);
 }
 static struct option longopts[] = {
 	{"length",  required_argument, NULL, 'l'},
+	{"offset",  required_argument, NULL, 'o'},
 	{"pattern", required_argument, NULL, 'p'},
 	{"repeat",  required_argument, NULL, 'r'},
 	{NULL,      0,                 NULL, 0  },
@@ -102,15 +104,21 @@ static struct option longopts[] = {
 /* Main logic */
 int main(int argc, char **argv) {
 	size_t length = 8192;
+	size_t offset = 0;
 	const char *pattern_s = "1110110";
 	int repeat = 128;
 	int c, index = 0;
-	while ((c = getopt_long(argc, argv, "l:p:r:", longopts, &index)) != -1) {
+	while ((c = getopt_long(argc, argv, "l:o:p:r:", longopts, &index)) != -1) {
 		switch (c) {
 			case 'l': length = atoi(optarg); break;
+			case 'o': offset = atoi(optarg); break;
 			case 'p': pattern_s = optarg; break;
 			case 'r': repeat = atoi(optarg); break;
 		}
+	}
+	if (length < sizeof(code1) + sizeof(code2)) {
+		fprintf(stderr, "%s: length must be at least %zu\n", argv[0], sizeof(code1) + sizeof(code2));
+		return EXIT_FAILURE;
 	}
 
 	cpu_set_t cpus;
@@ -119,15 +127,15 @@ int main(int argc, char **argv) {
 	int ret = sched_setaffinity(getpid(), sizeof(cpus), &cpus);
 	assert(ret == 0);
 	void *pattern = alloc_pattern(pattern_s, repeat);
-	char *p = mmap(NULL, length, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	char *p = mmap(NULL, offset + length, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 	assert(p != MAP_FAILED);
-	long *dts = calloc((length / 2) * (length / 2), sizeof(long));
-	assert(dts != NULL);
 	struct timer t;
-	timer_init(&t, dts);
-	for (size_t i = 0; i < length - sizeof(code1); i += 2) {
+	timer_init(&t, length);
+	size_t imax = offset + length - sizeof(code1) - sizeof(code2);
+	for (size_t i = offset; i <= imax; i += 2) {
 		emit1(p + i);
-		for (size_t j = i + sizeof(code1); j < length - sizeof(code2); j += 2) {
+		size_t jmax = offset + length - sizeof(code2);
+		for (size_t j = i + sizeof(code1); j <= jmax; j += 2) {
 			emit2(p + j);
 			link12(p + i, p + j);
 			timer_start(&t);
@@ -135,5 +143,5 @@ int main(int argc, char **argv) {
 			timer_end(&t);
 		}
 	}
-	output(dts, length);
+	output(length, offset, &t);
 }
