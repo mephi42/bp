@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 #include <assert.h>
+#include <endian.h>
 #include <getopt.h>
 #include <netinet/in.h>
 #include <sched.h>
@@ -11,13 +12,14 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-#ifdef __s390x__
+#if defined(__s390x__)
 #include "s390x.h"
+#elif defined(__x86_64__)
+#include "x86_64.h"
 #else
 #error Unsupported architecture
 #endif
 
-/* User interface */
 static void *alloc_pattern(const char *s, int repeat)
 {
 	size_t len = strlen(s);
@@ -32,10 +34,12 @@ static void *alloc_pattern(const char *s, int repeat)
 	}
 	return d;
 }
-static void output(size_t length, size_t offset, struct timer *t)
+
+static void output(void *base, size_t length, struct timer *t)
 {
-	uint32_t header[] = { htonl(1), htonl((uint32_t)length),
-			      htonl((uint32_t)offset) };
+	uint64_t header[] = { htobe64(1), htobe64((uint64_t)base),
+			      htobe64((uint64_t)length),
+			      htobe64(INSN_ALIGNMENT) };
 	fwrite(header, sizeof(header), 1, stdout);
 	fwrite(t->dts, t->dt - t->dts, sizeof(unsigned short), stdout);
 }
@@ -97,16 +101,17 @@ int main(int argc, char **argv)
 	struct timer t;
 	timer_init(&t, length);
 	size_t imax = offset + length - sizeof(code1) - sizeof(code2);
-	for (size_t i = offset; i <= imax; i += 2) {
+	for (size_t i = offset; i <= imax; i += INSN_ALIGNMENT) {
 		emit1(p + i);
 		size_t jmax = offset + length - sizeof(code2);
-		for (size_t j = i + sizeof(code1); j <= jmax; j += 2) {
+		for (size_t j = i + sizeof(code1); j <= jmax;
+		     j += INSN_ALIGNMENT) {
 			emit2(p + j);
 			link12(p + i, p + j);
 			timer_start(&t);
-			((int (*)(int, int *))(p + i))(repeat, pattern);
+			((int (*)(long, int *))(p + i))(repeat, pattern);
 			timer_end(&t);
 		}
 	}
-	output(length, offset, &t);
+	output(p + offset, length, &t);
 }
