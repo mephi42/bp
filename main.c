@@ -1,9 +1,7 @@
 #define _GNU_SOURCE
 #include <assert.h>
-#include <endian.h>
 #include <getopt.h>
 #include <netinet/in.h>
-#include <sched.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -18,6 +16,14 @@
 #include "x86_64.h"
 #else
 #error Unsupported architecture
+#endif
+
+#if defined(__linux__)
+#include "linux.h"
+#elif defined(__APPLE__)
+#include "apple.h"
+#else
+#error Unsupported OS
 #endif
 
 static void *alloc_pattern(const char *s, int repeat)
@@ -88,11 +94,7 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	cpu_set_t cpus;
-	CPU_ZERO(&cpus);
-	CPU_SET(sched_getcpu(), &cpus);
-	int ret = sched_setaffinity(getpid(), sizeof(cpus), &cpus);
-	assert(ret == 0);
+	pin_to_single_cpu();
 	void *pattern = alloc_pattern(pattern_s, repeat);
 	const int prot = PROT_READ | PROT_WRITE | PROT_EXEC;
 	const int flags = MAP_PRIVATE | MAP_ANONYMOUS;
