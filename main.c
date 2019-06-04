@@ -43,9 +43,12 @@ static void *alloc_pattern(const char *s, int repeat)
 
 static void output(void *base, size_t length, struct timer *t)
 {
-	uint64_t header[] = { htobe64(1), htobe64((uint64_t)base),
+	uint64_t header[] = { htobe64(1),
+			      htobe64((uint64_t)base),
 			      htobe64((uint64_t)length),
-			      htobe64(INSN_ALIGNMENT) };
+			      htobe64(INSN_ALIGNMENT),
+			      htobe64(sizeof(code1)),
+			      htobe64(sizeof(code2)) };
 	fwrite(header, sizeof(header), 1, stdout);
 	fwrite(t->dts, t->dt - t->dts, sizeof(unsigned short), stdout);
 }
