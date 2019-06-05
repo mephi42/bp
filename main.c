@@ -10,7 +10,9 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-#if defined(__powerpc64__)
+#if defined(__aarch64__)
+#include "aarch64.h"
+#elif defined(__powerpc64__)
 #include "ppc64.h"
 #elif defined(__s390x__)
 #include "s390x.h"
