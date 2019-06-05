@@ -63,8 +63,8 @@ static void timer_init_1(struct timer *t)
 static unsigned long long readcyclecounter()
 {
 	unsigned long long t;
-	__asm__ __volatile__("mrs %[t],cntvct_el0\n"
-			     "isb\n"
+	__asm__ __volatile__("isb\n"
+			     "mrs %[t],cntvct_el0\n"
 			     : [t] "=r"(t));
 	return t;
 }
