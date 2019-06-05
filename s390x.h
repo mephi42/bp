@@ -45,15 +45,11 @@ struct timer {
 	uint16_t *dts;
 	uint16_t *dt;
 	long t0;
-	long dummy2;
 	long dummy3;
 };
 
-static void timer_init(struct timer *t, size_t length)
+static void timer_init_1(struct timer *t)
 {
-	t->dts = calloc((length / 2) * (length / 2), sizeof(uint16_t));
-	assert(t->dts != NULL);
-	t->dt = t->dts;
 	t->dummy3 = (long)&t->dummy3;
 }
 
@@ -64,7 +60,7 @@ static void timer_start(struct timer *t)
 			 "lcgr %%r0,%%r0\n"
 			 "stg %%r0,%[t0]\n"
 			 : [t0] "+m"(t->t0), [dummy3] "+r"(t->dummy3)
-			 : [dummy2] "m"(t->dummy2)
+			 : [dummy2] "m"(t->dummy3)
 			 : "r0", "r1");
 }
 
@@ -73,7 +69,7 @@ static void timer_end(struct timer *t)
 	__asm__ volatile("ectg %[t0],%[dummy2],%[dummy3]\n"
 			 "stg %%r0,%[t0]\n"
 			 : [t0] "+m"(t->t0), [dummy3] "+r"(t->dummy3)
-			 : [dummy2] "m"(t->dummy2)
+			 : [dummy2] "m"(t->dummy3)
 			 : "r0", "r1");
 	*t->dt = t->t0 >= 0xffff ? 0xffff : htons((uint16_t)t->t0);
 	t->dt++;

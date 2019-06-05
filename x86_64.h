@@ -47,11 +47,8 @@ struct timer {
 	unsigned long long t0;
 };
 
-static void timer_init(struct timer *t, size_t length)
+static void timer_init_1(struct timer *t)
 {
-	t->dts = calloc(length * length, sizeof(uint16_t));
-	assert(t->dts != NULL);
-	t->dt = t->dts;
 }
 
 static void timer_start(struct timer *t)

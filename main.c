@@ -10,7 +10,9 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-#if defined(__s390x__)
+#if defined(__powerpc64__)
+#include "ppc64.h"
+#elif defined(__s390x__)
 #include "s390x.h"
 #elif defined(__x86_64__)
 #include "x86_64.h"
@@ -39,6 +41,15 @@ static void *alloc_pattern(const char *s, int repeat)
 		memcpy(&d[i], &d[0], len);
 	}
 	return d;
+}
+
+static void timer_init(struct timer *t, size_t length)
+{
+	t->dts = calloc((length / INSN_ALIGNMENT) * (length / INSN_ALIGNMENT),
+			sizeof(uint16_t));
+	assert(t->dts != NULL);
+	t->dt = t->dts;
+	timer_init_1(t);
 }
 
 static void output(void *base, size_t length, struct timer *t)
