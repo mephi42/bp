@@ -1,5 +1,8 @@
 #ifndef S390X_H
 #define S390X_H
+#include <arpa/inet.h>
+#include <stdint.h>
+#include <string.h>
 
 #define INSN_ALIGNMENT 2
 
@@ -71,7 +74,7 @@ static void timer_end(struct timer *t)
 			 : [t0] "+m"(t->t0), [dummy3] "+r"(t->dummy3)
 			 : [dummy2] "m"(t->dummy3)
 			 : "r0", "r1");
-	*t->dt = t->t0 >= 0xffff ? 0xffff : htons((uint16_t)t->t0);
+	*t->dt = t->t0 >= 0xFFFF ? 0xFFFF : htons((uint16_t)t->t0);
 	t->dt++;
 }
 

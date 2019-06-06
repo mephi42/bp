@@ -1,22 +1,19 @@
 #ifndef AARCH64_H
 #define AARCH64_H
+#include <arpa/inet.h>
+#include <stdint.h>
+#include <string.h>
 
 #define INSN_ALIGNMENT 4
-
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#define INSN(a, b, c, d) d, c, b, a
-#else
-#define INSN(a, b, c, d) a, b, c, d
-#endif
 
 /* Code generation */
 /* x0: repeat count */
 /* x1: branch history */
-static const char code1[] = {
-	INSN(0xB9, 0x40, 0x00, 0x22), /*	0: ldr w2,[x1]		*/
-	INSN(0x91, 0x00, 0x10, 0x21), /*	add x1,x1,4		*/
-	INSN(0x35, 0xFF, 0xFF, 0xC2), /*	cbnz w2,0b		*/
-	INSN(0x14, 0xCF, 0xEB, 0xBE), /*	b 1f			*/
+static const uint32_t code1[] = {
+	0xB9400022, /*	0: ldr w2,[x1]	*/
+	0x91001021, /*	add x1,x1,4	*/
+	0x35FFFFC2, /*	cbnz w2,0b	*/
+	0x14CFEBBE, /*	b 1f		*/
 };
 
 static void emit1(char *dst1)
@@ -24,13 +21,13 @@ static void emit1(char *dst1)
 	memcpy(dst1, code1, sizeof(code1));
 }
 
-static const char code2[] = {
-	INSN(0xB9, 0x40, 0x00, 0x22), /*	1: ldr w2,[x1]		*/
-	INSN(0x91, 0x00, 0x10, 0x21), /*	add x1,x1,4		*/
-	INSN(0x35, 0xFF, 0xFF, 0xC2), /*	cbnz w2,1b		*/
-	INSN(0xD1, 0x00, 0x04, 0x00), /*	sub x0,x0,1		*/
-	INSN(0xB5, 0xFF, 0xFF, 0x00), /*	cbnz x0,0b		*/
-	INSN(0xD6, 0x5F, 0x03, 0xC0), /*	ret			*/
+static const uint32_t code2[] = {
+	0xB9400022, /*	1: ldr w2,[x1]	*/
+	0x91001021, /*	add x1,x1,4	*/
+	0x35FFFFC2, /*	cbnz w2,1b	*/
+	0xD1000400, /*	sub x0,x0,1	*/
+	0xB5FFFF00, /*	cbnz x0,0b	*/
+	0xD65F03C0, /*	ret		*/
 };
 
 static void emit2(char *dst2)
@@ -40,11 +37,11 @@ static void emit2(char *dst2)
 
 static void link12(char *dst1, char *dst2)
 {
-	int *b1 = (int *)(dst1 + sizeof(code1) - 4);
-	int *b2 = (int *)(dst2 + sizeof(code2) - 8);
-	*b1 = (*b1 & 0xfc000000) | (((dst2 - (char *)b1) >> 2) & 0x3ffffff);
-	*b2 = (*b2 & 0xff00001f) |
-	      ((((dst1 - (char *)b2) >> 2) & 0x7ffff) << 5);
+	uint32_t *b1 = (uint32_t *)(dst1 + sizeof(code1) - 4);
+	uint32_t *b2 = (uint32_t *)(dst2 + sizeof(code2) - 8);
+	*b1 = (*b1 & 0xFC000000) | (((dst2 - (char *)b1) >> 2) & 0x3FFFFFF);
+	*b2 = (*b2 & 0xFF00001F) |
+	      ((((dst1 - (char *)b2) >> 2) & 0x7FFFF) << 5);
 	__builtin___clear_cache(dst1, dst1 + sizeof(code1));
 	__builtin___clear_cache(dst2, dst2 + sizeof(code2));
 }
@@ -77,7 +74,7 @@ static void timer_start(struct timer *t)
 static void timer_end(struct timer *t)
 {
 	unsigned long long dt = readcyclecounter() - t->t0;
-	*t->dt = dt >= 0xffff ? 0xffff : htons((uint16_t)dt);
+	*t->dt = dt >= 0xFFFF ? 0xFFFF : htons((uint16_t)dt);
 	t->dt++;
 }
 

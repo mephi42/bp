@@ -1,7 +1,6 @@
 #define _GNU_SOURCE
 #include <assert.h>
 #include <getopt.h>
-#include <netinet/in.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>

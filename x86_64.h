@@ -1,6 +1,6 @@
 #ifndef X86_64_H
 #define X86_64_H
-
+#include <arpa/inet.h>
 #include <x86intrin.h>
 
 #define INSN_ALIGNMENT 1
@@ -61,7 +61,7 @@ static void timer_end(struct timer *t)
 {
 	unsigned int dummy;
 	unsigned long long dt = __rdtscp(&dummy) - t->t0;
-	*t->dt = dt >= 0xffff ? 0xffff : htons((uint16_t)dt);
+	*t->dt = dt >= 0xFFFF ? 0xFFFF : htons((uint16_t)dt);
 	t->dt++;
 }
 
