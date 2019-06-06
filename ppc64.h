@@ -17,11 +17,6 @@ static const uint32_t code1[] = {
 	0x48DEDBEF, /*	b 1f			*/
 };
 
-static void emit1(char *dst1)
-{
-	memcpy(dst1, code1, sizeof(code1));
-}
-
 static const uint32_t code2[] = {
 	0x80040000, /*	1: lwz %r0,0(%r4)	*/
 	0x38840004, /*	addi %r4,%r4,4		*/
@@ -32,11 +27,6 @@ static const uint32_t code2[] = {
 	0x4D820020, /*	bclr 12,2,0		*/
 	0x4BCFEBBE, /*	b 0b			*/
 };
-
-static void emit2(char *dst2)
-{
-	memcpy(dst2, code2, sizeof(code2));
-}
 
 static void link12(char *dst1, char *dst2)
 {

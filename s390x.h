@@ -16,11 +16,6 @@ static const char code1[] = {
 	0xC0, 0xF4, 0xDE, 0xAD, 0xBE, 0xEF, /*    j 1f		*/
 };
 
-static void emit1(char *dst1)
-{
-	memcpy(dst1, code1, sizeof(code1));
-}
-
 static const char code2[] = {
 	0xE3, 0x00, 0x30, 0x00, 0x00, 0x12, /* 1: lt %r0,(%r3)	*/
 	0x41, 0x30, 0x30, 0x04, /*                la %r3,4(%r3)	*/
@@ -29,11 +24,6 @@ static const char code2[] = {
 	0xC0, 0x74, 0xCA, 0xFE, 0xBA, 0xBE, /*    brcl 7,0b	*/
 	0x07, 0xFE, /*                            br %r14	*/
 };
-
-static void emit2(char *dst2)
-{
-	memcpy(dst2, code2, sizeof(code2));
-}
 
 static void link12(char *dst1, char *dst2)
 {

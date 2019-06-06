@@ -119,11 +119,11 @@ int main(int argc, char **argv)
 	timer_init(&t, length);
 	size_t imax = offset + length - sizeof(code1) - sizeof(code2);
 	for (size_t i = offset; i <= imax; i += INSN_ALIGNMENT) {
-		emit1(p + i);
+		memcpy(p + i, code1, sizeof(code1));
 		size_t jmax = offset + length - sizeof(code2);
 		for (size_t j = i + sizeof(code1); j <= jmax;
 		     j += INSN_ALIGNMENT) {
-			emit2(p + j);
+			memcpy(p + j, code2, sizeof(code2));
 			link12(p + i, p + j);
 			timer_start(&t);
 			((int (*)(long, int *))(p + i))(repeat, pattern);
