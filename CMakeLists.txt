@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
 project(bp)
-set(CMAKE_C_FLAGS "-std=c11 ${CMAKE_C_FLAGS}")
+set(CMAKE_C_FLAGS "-std=c99 ${CMAKE_C_FLAGS}")
 add_executable(bp aarch64.h apple.h bp.c linux.h ppc64.h s390x.h x86_64.h)
 add_custom_target(format COMMAND clang-format -style=file -i *.c *.h)
