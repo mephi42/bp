@@ -32,8 +32,6 @@ static void link12(char *dst1, char *dst2)
 	*b1 = (*b1 & 0xFC000000) | (((dst2 - (char *)b1) >> 2) & 0x3FFFFFF);
 	*b2 = (*b2 & 0xFF00001F) |
 	      ((((dst1 - (char *)b2) >> 2) & 0x7FFFF) << 5);
-	__builtin___clear_cache(dst1, dst1 + sizeof(code1));
-	__builtin___clear_cache(dst2, dst2 + sizeof(code2));
 }
 
 /* Time measurements */

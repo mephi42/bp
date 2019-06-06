@@ -125,6 +125,8 @@ int main(int argc, char **argv)
 		     j += INSN_ALIGNMENT) {
 			memcpy(p + j, code2, sizeof(code2));
 			link12(p + i, p + j);
+			__builtin___clear_cache(p + i, p + i + sizeof(code1));
+			__builtin___clear_cache(p + j, p + j + sizeof(code2));
 			timer_start(&t);
 			((int (*)(long, int *))(p + i))(repeat, pattern);
 			timer_end(&t);
