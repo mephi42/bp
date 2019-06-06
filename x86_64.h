@@ -1,6 +1,7 @@
 #ifndef X86_64_H
 #define X86_64_H
 #include <arpa/inet.h>
+#include <stdint.h>
 #include <x86intrin.h>
 
 #define INSN_ALIGNMENT 1

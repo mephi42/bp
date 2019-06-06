@@ -11,6 +11,8 @@
 
 #if defined(__aarch64__)
 #include "aarch64.h"
+#elif defined(__mips64)
+#include "mips64.h"
 #elif defined(__powerpc64__)
 #include "ppc64.h"
 #elif defined(__s390x__)

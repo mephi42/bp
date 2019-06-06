@@ -2,7 +2,6 @@
 #define S390X_H
 #include <arpa/inet.h>
 #include <stdint.h>
-#include <string.h>
 
 #define INSN_ALIGNMENT 2
 
