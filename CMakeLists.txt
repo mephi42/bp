@@ -4,7 +4,7 @@ set(CMAKE_C_FLAGS "-std=c99 ${CMAKE_C_FLAGS}")
 if (ARCH EQUAL "mips64")
     set(CMAKE_C_FLAGS "-march=mips64r2 -mabi=64 ${CMAKE_C_FLAGS}")
 endif ()
-add_executable(bp
+set(SOURCES
         arch/aarch64.h
         arch/mips64.h
         arch/ppc64.h
@@ -14,4 +14,5 @@ add_executable(bp
         os/apple.h
         os/linux.h
         )
-add_custom_target(format COMMAND clang-format -style=file -i *.c *.h)
+add_executable(bp ${SOURCES})
+add_custom_target(format COMMAND clang-format -style=file -i ${SOURCES})
