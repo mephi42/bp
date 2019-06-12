@@ -10,23 +10,23 @@
 #include <unistd.h>
 
 #if defined(__aarch64__)
-#include "aarch64.h"
+#include "arch/aarch64.h"
 #elif defined(__mips64)
-#include "mips64.h"
+#include "arch/mips64.h"
 #elif defined(__powerpc64__)
-#include "ppc64.h"
+#include "arch/ppc64.h"
 #elif defined(__s390x__)
-#include "s390x.h"
+#include "arch/s390x.h"
 #elif defined(__x86_64__)
-#include "x86_64.h"
+#include "arch/x86_64.h"
 #else
 #error Unsupported architecture
 #endif
 
 #if defined(__linux__)
-#include "linux.h"
+#include "os/linux.h"
 #elif defined(__APPLE__)
-#include "apple.h"
+#include "os/apple.h"
 #else
 #error Unsupported OS
 #endif

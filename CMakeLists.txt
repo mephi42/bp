@@ -4,5 +4,14 @@ set(CMAKE_C_FLAGS "-std=c99 ${CMAKE_C_FLAGS}")
 if (ARCH EQUAL "mips64")
     set(CMAKE_C_FLAGS "-march=mips64r2 -mabi=64 ${CMAKE_C_FLAGS}")
 endif ()
-add_executable(bp aarch64.h apple.h bp.c linux.h mips64.h ppc64.h s390x.h x86_64.h)
+add_executable(bp
+        arch/aarch64.h
+        arch/mips64.h
+        arch/ppc64.h
+        arch/s390x.h
+        arch/x86_64.h
+        bp.c
+        os/apple.h
+        os/linux.h
+        )
 add_custom_target(format COMMAND clang-format -style=file -i *.c *.h)
