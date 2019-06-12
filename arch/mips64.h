@@ -16,6 +16,8 @@ static const uint32_t code1[] = {
 	0x1000DDBF, /*	b 1f			*/
 	0x00200825, /*	nop			*/
 };
+#define LOOP1_BRANCH_OFFSET 8
+#define LINK_BRANCH_OFFSET (sizeof(code1) - 8)
 
 static const uint32_t code2[] = {
 	0x9CAC0000, /*	1: lwu $t0,0($a1)	*/
@@ -28,11 +30,13 @@ static const uint32_t code2[] = {
 	0x03E00008, /*	jr $ra			*/
 	0x00200825, /*	nop			*/
 };
+#define LOOP2_BRANCH_OFFSET 8
+#define BACKLINK_BRANCH_OFFSET (sizeof(code2) - 16)
 
 static void link12(char *dst1, char *dst2)
 {
-	uint32_t *b1 = (uint32_t *)(dst1 + sizeof(code1) - 8);
-	uint32_t *b2 = (uint32_t *)(dst2 + sizeof(code2) - 16);
+	uint32_t *b1 = (uint32_t *)(dst1 + LINK_BRANCH_OFFSET);
+	uint32_t *b2 = (uint32_t *)(dst2 + BACKLINK_BRANCH_OFFSET);
 	*b1 = (*b1 & 0xFFFF0000) | (((dst2 - (char *)b1) >> 2) & 0xFFFF);
 	*b2 = (*b2 & 0xFFFF0000) | (((dst1 - (char *)b2) >> 2) & 0xFFFF);
 }

@@ -1,14 +1,15 @@
 #!/bin/bash
 set -e -u -x
 
-# Usage: ./go x86_64-host -DARCH=x86_64 aarch64-host -DARCH=aarch64 ...
+# Usage: ./go x86_64-host x86_64 aarch64-host aarch64 ...
 
 run_one() {
     set -e -u -x
     host=$1
-    cmake_opts=$2
+    arch=$2
     rsync -avz --files-from=<(git ls-files) . "$host":bp/
-    ssh "$host" bash -c "\"cd bp && cmake -DCMAKE_BUILD_TYPE=Debug $cmake_opts && make && ./bp >bp.bin\""
+    ssh "$host" bash -c "\"cd bp && cmake -DCMAKE_BUILD_TYPE=Debug -DARCH=$arch && make && ./bp >bp.bin\""
+    rsync -avz "$host":bp/bp.bin "bp-$arch.bin"
 }
 export -f run_one
 

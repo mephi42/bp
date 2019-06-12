@@ -15,6 +15,8 @@ static const char code1[] = {
 	0x74, 0xF7, /*				je 0b			*/
 	0xE9, 0xDE, 0xAD, 0xBE, 0xEF, /*	j 1f			*/
 };
+#define LOOP1_BRANCH_OFFSET 7
+#define LINK_BRANCH_OFFSET (sizeof(code1) - 5)
 
 static const char code2[] = {
 	0x83, 0x3E, 0x00, /*			1: cmpl $0,(%rsi)	*/
@@ -24,11 +26,15 @@ static const char code2[] = {
 	0x0F, 0x84, 0xCA, 0xFE, 0xBA, 0xBE, /*	jz 0b			*/
 	0xC3 /*					ret			*/
 };
+#define LOOP2_BRANCH_OFFSET 7
+#define BACKLINK_BRANCH_OFFSET (sizeof(code2) - 7)
 
 static void link12(char *dst1, char *dst2)
 {
-	*(int *)(dst1 + sizeof(code1) - 4) = dst2 - (dst1 + sizeof(code1));
-	*(int *)(dst2 + sizeof(code2) - 5) = dst1 - (dst2 + sizeof(code2) - 1);
+	*(int32_t *)(dst1 + LINK_BRANCH_OFFSET + 1) =
+		dst2 - (dst1 + LINK_BRANCH_OFFSET + 5);
+	*(int32_t *)(dst2 + BACKLINK_BRANCH_OFFSET + 2) =
+		dst1 - (dst2 + BACKLINK_BRANCH_OFFSET + 6);
 }
 
 /* Time measurements */

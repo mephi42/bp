@@ -57,12 +57,18 @@ static void timer_init(struct timer *t, size_t length)
 
 static void output(void *base, size_t length, struct timer *t)
 {
-	uint64_t header[] = { htobe64(1),
-			      htobe64((uint64_t)base),
-			      htobe64((uint64_t)length),
-			      htobe64(INSN_ALIGNMENT),
-			      htobe64(sizeof(code1)),
-			      htobe64(sizeof(code2)) };
+	uint64_t header[] = {
+		htobe64(1),
+		htobe64((uint64_t)base),
+		htobe64((uint64_t)length),
+		htobe64(INSN_ALIGNMENT),
+		htobe64(sizeof(code1)),
+		htobe64(LOOP1_BRANCH_OFFSET),
+		htobe64(LINK_BRANCH_OFFSET),
+		htobe64(sizeof(code2)),
+		htobe64(LOOP2_BRANCH_OFFSET),
+		htobe64(BACKLINK_BRANCH_OFFSET),
+	};
 	fwrite(header, sizeof(header), 1, stdout);
 	fwrite(t->dts, t->dt - t->dts, sizeof(unsigned short), stdout);
 }
