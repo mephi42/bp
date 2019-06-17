@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-3.0 */
 #ifndef AARCH64_H
 #define AARCH64_H
 #include <arpa/inet.h>
@@ -48,7 +49,7 @@ static void timer_init_1(struct timer *t)
 {
 }
 
-static unsigned long long readcyclecounter()
+static unsigned long long readcyclecounter(void)
 {
 	unsigned long long t;
 	__asm__ __volatile__("isb\n"

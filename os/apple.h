@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-3.0 */
 #ifndef APPLE_H
 #define APPLE_H
 #include <libkern/OSByteOrder.h>

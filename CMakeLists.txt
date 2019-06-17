@@ -16,3 +16,4 @@ set(SOURCES
         )
 add_executable(bp ${SOURCES})
 add_custom_target(format COMMAND clang-format -style=file -i ${SOURCES})
+add_custom_target(checkpatch COMMAND checkpatch.pl -f ${SOURCES})

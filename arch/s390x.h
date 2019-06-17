@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-3.0 */
 #ifndef S390X_H
 #define S390X_H
 #include <arpa/inet.h>

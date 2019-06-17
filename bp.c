@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0
 #define _GNU_SOURCE
 #include <assert.h>
 #include <getopt.h>
@@ -37,12 +38,10 @@ static void *alloc_pattern(const char *s, int repeat)
 	const int count = len * repeat;
 	int *d = malloc(count * sizeof(int));
 	assert(d != NULL);
-	for (size_t i = 0; i < len; i++) {
+	for (size_t i = 0; i < len; i++)
 		d[i] = s[i] == '0' ? 0 : 1;
-	}
-	for (int i = len; i < count; i += len) {
+	for (int i = len; i < count; i += len)
 		memcpy(&d[i], &d[0], len);
-	}
 	return d;
 }
 
@@ -104,9 +103,8 @@ int main(int argc, char **argv)
 	while (1) {
 		int index = 0;
 		int c = getopt_long(argc, argv, shortopts, longopts, &index);
-		if (c == -1) {
+		if (c == -1)
 			break;
-		}
 		switch (c) {
 		case 'l':
 			length1 = atoi(optarg);
@@ -151,9 +149,8 @@ int main(int argc, char **argv)
 			argv[0], INSN_ALIGNMENT);
 		fail = 1;
 	}
-	if (fail) {
+	if (fail)
 		return EXIT_FAILURE;
-	}
 
 	pin_to_single_cpu();
 	void *pattern = alloc_pattern(pattern_s, repeat);

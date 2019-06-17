@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-3.0 */
 #ifndef LINUX_H
 #define LINUX_H
 #include <endian.h>
