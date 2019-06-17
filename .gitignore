@@ -3,5 +3,10 @@ CMakeCache.txt
 CMakeFiles/
 Makefile
 bp
+bp-aarch64.bin
+bp-mips64.bin
+bp-ppc64.bin
+bp-s390x.bin
+bp-x86_64.bin
 bp.cbp
 cmake_install.cmake
