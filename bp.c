@@ -45,6 +45,25 @@ static void *alloc_pattern(const char *s, int repeat)
 	return d;
 }
 
+static void print_asm_buf(const char *buf, size_t size)
+{
+	for (size_t i = 0; i < size; i++)
+		printf("\t.byte 0x%.2x\n", buf[i] & 0xff);
+}
+
+static void print_asm(const char *base, size_t offset1, size_t offset2)
+{
+	printf("\t.align 4096\n"
+	       "\t.org .+0x%zx\n"
+	       ".globl bp_0x%zx_0x%zx\n"
+	       "\t.type bp_0x%zx_0x%zx, @function\n"
+	       "bp_0x%zx_0x%zx:\n",
+	       offset1, offset1, offset2, offset1, offset2, offset1, offset2);
+	print_asm_buf(base + offset1, sizeof(code1));
+	printf("\t.org .+0x%zx\n", offset2 - (offset1 + sizeof(code1)));
+	print_asm_buf(base + offset2, sizeof(code2));
+}
+
 static void timer_init(struct timer *t, size_t length1, size_t length2)
 {
 	t->dts = calloc((length1 / INSN_ALIGNMENT) * (length2 / INSN_ALIGNMENT),
@@ -78,7 +97,7 @@ static void output(void *base, size_t offset1, size_t length1, size_t offset2,
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
-static const char *shortopts = "l:L:o:O:p:r:";
+static const char *shortopts = "al:L:o:O:p:r:";
 
 static const struct option longopts[] = {
 	{ "length1", required_argument, NULL, 'l' },
@@ -86,6 +105,7 @@ static const struct option longopts[] = {
 	{ "offset1", required_argument, NULL, 'o' },
 	{ "offset2", required_argument, NULL, 'O' },
 	{ "pattern", required_argument, NULL, 'p' },
+	{ "print-asm", no_argument, NULL, 'a' },
 	{ "repeat", required_argument, NULL, 'r' },
 	{ NULL, 0, NULL, 0 },
 };
@@ -98,14 +118,18 @@ int main(int argc, char **argv)
 	size_t offset1 = 0;
 	size_t offset2 = 0;
 	const char *pattern_s = "1110110";
+	int print_asm_p = 0;
 	int repeat = 128;
-	int fail = 0;
+	int fail_p = 0;
 	while (1) {
 		int index = 0;
 		int c = getopt_long(argc, argv, shortopts, longopts, &index);
 		if (c == -1)
 			break;
 		switch (c) {
+		case 'a':
+			print_asm_p = 1;
+			break;
 		case 'l':
 			length1 = atoi(optarg);
 			break;
@@ -125,31 +149,31 @@ int main(int argc, char **argv)
 			repeat = atoi(optarg);
 			break;
 		default:
-			fail = 1;
+			fail_p = 1;
 			break;
 		}
 	}
 	if (length1 < sizeof(code1)) {
 		fprintf(stderr, "%s: length1 must be at least %zu\n", argv[0],
 			sizeof(code1));
-		fail = 1;
+		fail_p = 1;
 	}
 	if (length2 < sizeof(code2)) {
 		fprintf(stderr, "%s: length2 must be at least %zu\n", argv[0],
 			sizeof(code2));
-		fail = 1;
+		fail_p = 1;
 	}
 	if (offset1 % INSN_ALIGNMENT) {
 		fprintf(stderr, "%s: offset1 must be divisible by %d\n",
 			argv[0], INSN_ALIGNMENT);
-		fail = 1;
+		fail_p = 1;
 	}
 	if (offset2 % INSN_ALIGNMENT) {
 		fprintf(stderr, "%s: offset2 must be divisible by %d\n",
 			argv[0], INSN_ALIGNMENT);
-		fail = 1;
+		fail_p = 1;
 	}
-	if (fail)
+	if (fail_p)
 		return EXIT_FAILURE;
 
 	pin_to_single_cpu();
@@ -169,12 +193,17 @@ int main(int argc, char **argv)
 		for (size_t j = j0; j <= jmax; j += INSN_ALIGNMENT) {
 			memcpy(p + j, code2, sizeof(code2));
 			link12(p + i, p + j);
+			if (print_asm_p) {
+				print_asm(p, i, j);
+				continue;
+			}
 			__builtin___clear_cache(p + i, p + i + sizeof(code1));
 			__builtin___clear_cache(p + j, p + j + sizeof(code2));
 			timer_start(&t);
-			((int (*)(long, int *))(p + i))(repeat, pattern);
+			((void (*)(long, int *))(p + i))(repeat, pattern);
 			timer_end(&t);
 		}
 	}
-	output(p, offset1, length1, offset2, length2, &t);
+	if (!print_asm_p)
+		output(p, offset1, length1, offset2, length2, &t);
 }
