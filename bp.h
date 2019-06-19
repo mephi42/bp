@@ -2,6 +2,7 @@
 #define BP_H
 #include <assert.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -18,11 +19,26 @@ static void *alloc_pattern(const char *s, int repeat)
 	return d;
 }
 
-#define SECTION_BPS(s) "\t.section bps, \"a\",@progbits\n" s "\t.previous\n"
+#if INTPTR_MAX == INT32_MAX
+#define GAS_PTR ".long"
+#else
+#define GAS_PTR ".quad"
+#endif
+
+#define SECTION_BPS(s) "\t.section bps, \"a\", @progbits\n" s "\t.previous\n"
 
 #define START_BPS()                                                            \
 	extern void (*bps_start)(long, int *);                                 \
 	__asm__(SECTION_BPS("bps_start:\n"))
+
+#define DEFINE_BP(name, offset1, body1, offset12, body2)                       \
+	extern void name(long, int *);                                         \
+	__asm__("\t.align 0x1000\n"                                            \
+		"\t.org .+" #offset1 "\n"                                      \
+		".globl " #name "\n"                                           \
+		"\t.type " #name ", @function\n" #name ":\n" body1             \
+		"\t.org .+" #offset12                                          \
+		"\n" body2 SECTION_BPS("\t" GAS_PTR " " #name "\n"))
 
 #define END_BPS(pattern_s, repeat)                                             \
 	extern void (*bps_end)(long, int *);                                   \

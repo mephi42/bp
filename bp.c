@@ -45,25 +45,13 @@ static void print_asm_buf(const char *buf, size_t size)
 		printf("\t\"\\t.byte 0x%.2x\\n\"\n", buf[i] & 0xff);
 }
 
-static const char *gas_ptr = sizeof(long) == 4 ? ".long" : ".quad";
-
 static void print_asm(const char *base, size_t offset1, size_t offset2)
 {
-	printf("extern void bp_0x%zx_0x%zx(long, int *);\n"
-	       "__asm__(\n"
-	       "\t\"\\t.align 0x1000\\n\"\n"
-	       "\t\"\\t.org .+0x%zx\\n\"\n"
-	       "\t\".globl bp_0x%zx_0x%zx\\n\"\n"
-	       "\t\"\\t.type bp_0x%zx_0x%zx, @function\\n\"\n"
-	       "\t\"bp_0x%zx_0x%zx:\\n\"\n",
-	       offset1, offset2, offset1, offset1, offset2, offset1, offset2,
-	       offset1, offset2);
+	printf("DEFINE_BP(bp_0x%zx_0x%zx, 0x%zx,\n", offset1, offset2, offset1);
 	print_asm_buf(base + offset1, sizeof(code1));
-	printf("\t\"\\t.org .+0x%zx\\n\"\n",
-	       offset2 - (offset1 + sizeof(code1)));
+	printf(", 0x%zx,\n", offset2 - (offset1 + sizeof(code1)));
 	print_asm_buf(base + offset2, sizeof(code2));
-	printf("\tSECTION_BPS(\"\\t%s bp_0x%zx_0x%zx\\n\"));\n",
-	       gas_ptr, offset1, offset2);
+	printf(");\n");
 }
 
 static void print_asm_footer(const char *pattern_s, int repeat)
