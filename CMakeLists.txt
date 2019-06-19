@@ -11,6 +11,7 @@ set(SOURCES
         arch/s390x.h
         arch/x86_64.h
         bp.c
+        bp.h
         os/apple.h
         os/linux.h
         )

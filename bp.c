@@ -32,18 +32,7 @@
 #error Unsupported OS
 #endif
 
-static void *alloc_pattern(const char *s, int repeat)
-{
-	size_t len = strlen(s);
-	size_t count = len * repeat;
-	int *d = malloc(count * sizeof(int));
-	assert(d != NULL);
-	for (size_t i = 0; i < len; i++)
-		d[i] = s[i] == '0' ? 0 : 1;
-	for (size_t i = len; i < count; i += len)
-		memcpy(&d[i], &d[0], len * sizeof(int));
-	return d;
-}
+#include "bp.h"
 
 static void print_asm_buf(const char *buf, size_t size)
 {
