@@ -62,9 +62,7 @@ static void print_asm(const char *base, size_t offset1, size_t offset2)
 	printf("\t\"\\t.org .+0x%zx\\n\"\n",
 	       offset2 - (offset1 + sizeof(code1)));
 	print_asm_buf(base + offset2, sizeof(code2));
-	printf("\t\"\\t.section bps, \\\"a\\\",@progbits\\n\"\n"
-	       "\t\"\\t%s bp_0x%zx_0x%zx\\n\"\n"
-	       "\t\"\\t.previous\\n\");\n",
+	printf("\tSECTION_BPS(\"\\t%s bp_0x%zx_0x%zx\\n\"));\n",
 	       gas_ptr, offset1, offset2);
 }
 
