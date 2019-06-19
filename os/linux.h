@@ -3,6 +3,7 @@
 #define LINUX_H
 #include <endian.h>
 #include <sched.h>
+#include <unistd.h>
 
 static void pin_to_single_cpu(void)
 {

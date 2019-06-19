@@ -47,6 +47,7 @@ struct timer {
 
 static void timer_init_1(struct timer *t)
 {
+	(void)t;
 }
 
 static void timer_start(struct timer *t)

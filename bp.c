@@ -8,7 +8,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
-#include <unistd.h>
 
 #if defined(__aarch64__)
 #include "arch/aarch64.h"

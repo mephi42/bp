@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 project(bp)
-set(CMAKE_C_FLAGS "-std=c99 ${CMAKE_C_FLAGS}")
+set(CMAKE_C_FLAGS "-std=c99 -Wall -Wextra -Werror ${CMAKE_C_FLAGS}")
 if (ARCH EQUAL "mips64")
     set(CMAKE_C_FLAGS "-march=mips64r2 -mabi=64 ${CMAKE_C_FLAGS}")
 endif ()

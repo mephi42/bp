@@ -49,6 +49,7 @@ struct timer {
 
 static void timer_init_1(struct timer *t)
 {
+	(void)t;
 }
 
 static unsigned long long readcyclecounter(void)
