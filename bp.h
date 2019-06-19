@@ -18,4 +18,23 @@ static void *alloc_pattern(const char *s, int repeat)
 	return d;
 }
 
+#define START_BPS()                                                            \
+	extern void (*bps_start)(long, int *);                                 \
+	__asm__("\t.section bps, \"a\",@progbits\n"                            \
+		"bps_start:\n"                                                 \
+		"\t.previous\n")
+
+#define END_BPS(pattern_s, repeat)                                             \
+	extern void (*bps_end)(long, int *);                                   \
+	__asm__("\t.section bps, \"a\",@progbits\n"                            \
+		"bps_end:\n"                                                   \
+		"\t.previous\n");                                              \
+	int main(void)                                                         \
+	{                                                                      \
+		void *pattern = alloc_pattern(pattern_s, repeat);              \
+		for (void (**bps)(long, int *) = &bps_start; bps != &bps_end;  \
+		     bps++)                                                    \
+			(*bps)(repeat, pattern);                               \
+	}
+
 #endif

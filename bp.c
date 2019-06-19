@@ -33,23 +33,44 @@
 
 #include "bp.h"
 
+static void print_asm_header(void)
+{
+	printf("#include \"bp.h\"\n"
+	       "START_BPS();\n");
+}
+
 static void print_asm_buf(const char *buf, size_t size)
 {
 	for (size_t i = 0; i < size; i++)
-		printf("\t.byte 0x%.2x\n", buf[i] & 0xff);
+		printf("\t\"\\t.byte 0x%.2x\\n\"\n", buf[i] & 0xff);
 }
+
+static const char *gas_ptr = sizeof(long) == 4 ? ".long" : ".quad";
 
 static void print_asm(const char *base, size_t offset1, size_t offset2)
 {
-	printf("\t.align 4096\n"
-	       "\t.org .+0x%zx\n"
-	       ".globl bp_0x%zx_0x%zx\n"
-	       "\t.type bp_0x%zx_0x%zx, @function\n"
-	       "bp_0x%zx_0x%zx:\n",
-	       offset1, offset1, offset2, offset1, offset2, offset1, offset2);
+	printf("extern void bp_0x%zx_0x%zx(long, int *);\n"
+	       "__asm__(\n"
+	       "\t\"\\t.align 0x1000\\n\"\n"
+	       "\t\"\\t.org .+0x%zx\\n\"\n"
+	       "\t\".globl bp_0x%zx_0x%zx\\n\"\n"
+	       "\t\"\\t.type bp_0x%zx_0x%zx, @function\\n\"\n"
+	       "\t\"bp_0x%zx_0x%zx:\\n\"\n",
+	       offset1, offset2, offset1, offset1, offset2, offset1, offset2,
+	       offset1, offset2);
 	print_asm_buf(base + offset1, sizeof(code1));
-	printf("\t.org .+0x%zx\n", offset2 - (offset1 + sizeof(code1)));
+	printf("\t\"\\t.org .+0x%zx\\n\"\n",
+	       offset2 - (offset1 + sizeof(code1)));
 	print_asm_buf(base + offset2, sizeof(code2));
+	printf("\t\"\\t.section bps, \\\"a\\\",@progbits\\n\"\n"
+	       "\t\"\\t%s bp_0x%zx_0x%zx\\n\"\n"
+	       "\t\"\\t.previous\\n\");\n",
+	       gas_ptr, offset1, offset2);
+}
+
+static void print_asm_footer(const char *pattern_s, int repeat)
+{
+	printf("END_BPS(\"%s\", %d);\n", pattern_s, repeat);
 }
 
 static void timer_init(struct timer *t, size_t length1, size_t length2)
@@ -173,6 +194,8 @@ int main(int argc, char **argv)
 	assert(p != MAP_FAILED);
 	struct timer t;
 	timer_init(&t, length1, length2);
+	if (print_asm_p)
+		print_asm_header();
 	size_t imax = offset1 + length1 - sizeof(code1);
 	for (size_t i = offset1; i <= imax; i += INSN_ALIGNMENT) {
 		memcpy(p + i, code1, sizeof(code1));
@@ -192,6 +215,8 @@ int main(int argc, char **argv)
 			timer_end(&t);
 		}
 	}
-	if (!print_asm_p)
+	if (print_asm_p)
+		print_asm_footer(pattern_s, repeat);
+	else
 		output(p, offset1, length1, offset2, length2, &t);
 }
